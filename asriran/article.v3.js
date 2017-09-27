@@ -54,6 +54,25 @@ var logo_icon_text = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAAA7CAYA
 var total_aggregative_item_count = 0;
 var aggregative_content_count = 0;
 var aggregative_contents = [];
+function scrollify(content) {
+    scroll_from_top = (pageyoffset) ? window.pageYOffset : get_doc.scrollTop;
+    if (scroll_from_top + content.targetOffsetFromTop > content.targetDivfromTop) {
+        clearInterval(content.scroll_set_interval_id);
+        if (content.notExist()) {
+            if (content.is_aggregative == null || content.is_aggregative === false) {
+                getJSON(content.url_format(), function (a) {
+                    content.extData = JSON.parse(a).data;
+                    if (content.extData.length)
+                        content.buildFunction(content);
+                }, function (a) {
+                });
+            }
+            else {
+                aggregative_contents.push(content);
+            }
+        }
+    }
+}
 function detectScreen() {
     var windowWidth = window.screen.width ||
         document.documentElement.clientWidth ||
@@ -69,6 +88,356 @@ function detectScreen() {
     }
     else
         return "LargeDevice";
+}
+function build(content) {
+    if (content.notExist()) {
+        var yektanet_div = '{id}{width: 100%;display:table;} {id} a, {id} a:hover{text-decoration:none;font-family:inherit;}{id} a{color:rgba(0,0,0,0.87);}';
+        var heading = '{id} .yektanet-articles__heading {color: rgba(0,0,0,0.87);font-family: inherit;font-size:inherit;position: relative;width: 100%;height: 50px;} {id} .yektanet-articles__heading.bottom{margin-bottom:10px}';
+        var heading_title = '{id} .yektanet-articles__heading-title {font-weight: bold;right:10px;margin:0;font-family: inherit;position: absolute;line-height: 2em;font-size: 1em;}';
+        var heading_branding = '{id} .yektanet-articles__heading-branding {position: absolute;left: 10px;width: 120px;} @media screen and (max-width:210px){{id} .yektanet-articles__heading-branding{display:none;} }';
+        var heading_branding_img = '{id} .yektanet-articles__heading-branding-image {position: relative;float: left;width: 25px;height: 25px;text-align: center;overflow: hidden;z-index: 3; -webkit-transition: width 0.5s, background-color 0.5s;transition: width 0.5s, background-color 0.5s; {id} .yektanet-articles__heading-branding-image img {vertical-align: middle;object-fit: cover;}}';
+        var heading_branding_icon_img = '{id} .yektanet-articles__heading-branding-icon-image {height:100%;position: absolute;left: 0;z-index: 2;} {id} .yektanet-articles__heading-branding-icon-image img {vertical-align:top;width: 25px;height: 25px;}';
+        var heading_branding_text_img = '{id} .yektanet-articles__heading-branding-text-image {height:100%;position: absolute;left: 30px;visibility: hidden;opacity: 0; -webkit-transition: opacity 0.5s linear, visibility 0.5s;transition: opacity 0.5s linear, visibility 0.5s;z-index: 1;}   {id} .yektanet-articles__heading-branding-text-image img {height: 19px;position: relative;top: 2px;}';
+        var heading_branding_label = '{id} .yektanet-articles__heading-branding-label {font-size: .8em;font-family: inherit;position: absolute;left: 30px;line-height: 25px;white-space: nowrap;transition:color 0.5s;-webkit-transition:color 0.5s;}  @media screen and (max-width:330px){{id} .yektanet-articles__heading-branding-label{display:none;} }';
+        var heading_branding_hover = '@media screen and (max-width: 1024px){{id} .yektanet-articles__heading-branding-text-image{visibility:visible;opacity:1;left:0;}{id} .yektanet-articles__heading-branding-icon-image{display:none;}{id} .yektanet-articles__heading-branding-image{width:48px;}{id} .yektanet-articles__heading-branding{width:128px;}{id} .yektanet-articles__heading-branding-label{left:55px;}} @media screen and (min-width: 1025px){{id} .yektanet-articles__heading-branding:hover .yektanet-articles__heading-branding-label{color:transparent}  {id} .yektanet-articles__heading-branding:hover .yektanet-articles__heading-branding-image{width: 85px!important;} {id} .yektanet-articles__heading-branding:hover .yektanet-articles__heading-branding-text-image {opacity:1;visibility:visible;}}';
+        var item = '{id} .item{position:relative;} {id} .item.horizontal{margin-bottom:5px;}';
+        var item_image = '{id} .item.vertical .item__image {position:relative;width:100%;padding-top:66.66%;}' +
+            ' {id} .item.vertical .item__image img {width: 100%;height: auto;object-fit: cover;vertical-align: middle;position:absolute;top:0;right:0;left:0;bottom:0;}' +
+            ' {id} .item.horizontal .item__image{float:right;width:33%;}' +
+            ' {id} .item.horizontal .item__image {min-height:50px;}' +
+            ' {id} .item__image img {width: 100%;height: auto;object-fit: cover;vertical-align: middle;}';
+        var item_body = '{id} .item__body {padding: 5px;}' +
+            '{id} .item.horizontal .item__body{float:right;width:67%;padding:0 15px;} {id} .item.horizontal .item__body{padding: 0 5px 0 0;}';
+        var item_title = '{id} .item__title {text-align:right;direction: rtl;color:rgba(0,0,0,0.87);font-family:inherit;font-size:1em;margin:0;line-height: 1.5em;height: 4.5em;overflow: hidden;text-align: right;}';
+        var grid = '{id} .grid {padding-right: 5px;padding-left: 5px;float: right;} {id} .grid a:hover{text-decoration:none;} {id} .grid a:hover .item__title{color:#bc0c00;}';
+        // general css class
+        var stickit = '{id} .stickit{position:fixed; top:5px;}';
+        var border_box = '.borderbox { -webkit-box-sizing: border-box; -moz-box-sizing: border-box;box-sizing: border-box;}';
+        var content_section = '{id} .yektanet-articles__content{padding:0 15px;}';
+        var content_wrapper = '{id} .yektanet-articles__content-wrapper {margin-right:-5px; margin-left:-5px;}';
+        var vertical_align = '{id} .vertically-aligned {position: absolute;top: 50%; -webkit-transform: translateY(-50%);transform: translateY(-50%);}';
+        var backface = '{id} .backface {backface-visibility: hidden; -webkit-backface-visibility: hidden;}';
+        var clearfix = '{id} .clearfix:after,{id} .clearfix:before{content:" ";display:table;} {id} .clearfix:after{clear:both;} {id} .clearfix{zoom:1}';
+        var media_queries = '';
+        if (content.media_queries.length) {
+            var items_in_row = void 0, ct = void 0;
+            if (content.media_queries[0]["min-width"] == undefined && content.media_queries[0]["max-width"] == undefined) {
+                ct = get_card_type(content, 0);
+                items_in_row = (typeof content.media_queries[0]["item_in_row"] === "number") ? content.media_queries[0]["item_in_row"] : content.media_queries[0]["item_in_row"][ct];
+                media_queries += '{id} .grid{width:' + 100 / items_in_row + '%;}';
+            }
+            else {
+                for (var mq = 0; mq < content.media_queries.length; mq++) {
+                    media_queries += '@media screen';
+                    var min_width_q = content.media_queries[mq]["min-width"];
+                    if (min_width_q != null) {
+                        media_queries += ' and (min-width:' + min_width_q + "px" + ') ';
+                    }
+                    var max_width_q = content.media_queries[mq]["max-width"];
+                    if (max_width_q != null) {
+                        media_queries += ' and (max-width:' + max_width_q + "px" + ') ';
+                    }
+                    ct = get_card_type(content, mq);
+                    items_in_row = (typeof content.media_queries[mq]["item_in_row"] === "number") ? content.media_queries[mq]["item_in_row"] : content.media_queries[mq]["item_in_row"][ct];
+                    media_queries += '{{id} .grid{width:' + 100 / items_in_row + '%;} }';
+                }
+            }
+        }
+        var custom_css = '';
+        for (var key in content.custom_css) {
+            if (content.custom_css.hasOwnProperty(key)) {
+                custom_css += content.custom_css[key];
+            }
+        }
+        var head = document.head || document.getElementsByTagName('head')[0];
+        var style = document.createElement('style');
+        var all_css_parts = yektanet_div + heading + heading_title + heading_branding + heading_branding_img + heading_branding_icon_img + heading_branding_text_img + heading_branding_label + heading_branding_hover + item + item_image + item_body + item_title + grid + stickit + border_box + content_section + content_wrapper + vertical_align + backface + clearfix + media_queries + custom_css;
+        all_css_parts = all_css_parts.replace(/{id}/gi, "#" + content.id_with_prefix);
+        style.type = 'text/css';
+        style.styleSheet ? style.styleSheet.cssText = all_css_parts : style.appendChild(document.createTextNode(all_css_parts));
+        head.appendChild(style);
+        //create html
+        content.box_template = '' +
+            '<div id="' + content.id_with_prefix + '" class="borderbox">';
+        if (content.has_heading_and_logo) {
+            content.box_template +=
+                '<div class="yektanet-articles__heading">' +
+                    '<p class="yektanet-articles__heading-title vertically-aligned">' + content.ArticleBoxHeader + '</p>';
+            if (content.has_logo) {
+                content.box_template +=
+                    '<div class="yektanet-articles__heading-branding vertically-aligned">' +
+                        '<a href="https://yektanet.com/?utm_source=' + content.name + '&utm_medium=widget" target="_blank" class="clearfix">' +
+                        '<div class="yektanet-articles__heading-branding-image">' +
+                        '<div class="yektanet-articles__heading-branding-icon-image vertically-aligned backface">' +
+                        '<img src="' + logo_icon + '" class="backface">' +
+                        '</div>' +
+                        '<div class="yektanet-articles__heading-branding-text-image backface">' +
+                        '<img src="' + logo_icon_text + '" class="backface">' +
+                        '</div>' +
+                        '</div>' +
+                        '<span class="yektanet-articles__heading-branding-label vertically-aligned backface">' + content.logo_text + '</span>' +
+                        '</a>' +
+                        '</div>';
+            }
+            content.box_template += '</div>';
+        }
+        content.box_template +=
+            '<div class="yektanet-articles__content">' +
+                '<div class="yektanet-articles__content-wrapper clearfix">';
+        var nofollow = void 0;
+        var responsive_card_type = get_from_media_query(content, 'count')[1];
+        for (var h = 0; h < content.extData.length; h++) {
+            var extra_title = content.extData[h].title, extra_img = content.extData[h].image, extra_url = content.extData[h].url, extra_follow = content.extData[h].allow_bots_follow;
+            if (content.nofollow != null) {
+                if (content.nofollow === true)
+                    nofollow = 'rel="nofollow"';
+                else if (content.nofollow === false)
+                    nofollow = "";
+            }
+            else
+                nofollow = (extra_follow) ? "" : 'rel="nofollow"';
+            if (content.type_of_card === "card") {
+                content.box_template +=
+                    '<div class="grid borderbox">' +
+                        ("<a " + nofollow + " href=\"" + extra_url + "\" target=\"_blank\" class=\"clearfix\">");
+                content.box_template +=
+                    '<div class="item ' + responsive_card_type + ' yn-tk-item clearfix" data-id="' + h + '">' +
+                        '<div class="item__image">' +
+                        '<img alt="' + extra_title + '" src="' + extra_img + '">' +
+                        '</div>' +
+                        '<div class="item__body borderbox">' +
+                        '<p class="item__title">' +
+                        extra_title +
+                        '</p>' +
+                        '</div>' +
+                        '</div>' +
+                        '</a>' +
+                        '</div>';
+            }
+            else if (content.type_of_card === "text") {
+                content.box_template +=
+                    '<div class="grid borderbox">' +
+                        ("<a " + nofollow + " href=\"" + extra_url + "\" target=\"_blank\" class=\"clearfix\">");
+                content.box_template +=
+                    '<div class="item ' + responsive_card_type + ' text yn-tk-item clearfix" data-id="' + h + '">' +
+                        '<div class="item__body borderbox">' +
+                        '<p class="item__title">' +
+                        extra_title +
+                        '</p>' +
+                        '</div>' +
+                        '</div>' +
+                        '</a>' +
+                        '</div>';
+            }
+        }
+        content.box_template += '</div></div></div>';
+        var newDiv_1 = htmlToElement(content.box_template);
+        var myTimer_1 = setInterval(function checkInterval() {
+            if (content.targetDiv != null) {
+                clearInterval(myTimer_1);
+                if (content.targetDivPosition === "after") {
+                    insertAfter(newDiv_1, content.targetDiv);
+                }
+                else if (content.targetDivPosition === "before") {
+                    var parentNode = content.targetDiv.parentNode;
+                    parentNode.insertBefore(newDiv_1, content.targetDiv);
+                }
+                else if (content.targetDivPosition === "append") {
+                    content.targetDiv.appendChild(newDiv_1);
+                }
+                else {
+                    console.log("handle error occured.");
+                }
+                if (content.stickit) {
+                    if (!mobileUserAgent() && !tabletUserAgent() && responsive_screen != "mobile" && responsive_screen != "tablet") {
+                        content.stickit();
+                    }
+                }
+            }
+        }, 100);
+    }
+}
+function getTargetDiv(content) {
+    if (content.notExist()) {
+        if (content.target_set_interval_id !== null) {
+            if (mobileUserAgent() && !content.show_in_mobile_user_agent) {
+                clearInterval(content.target_set_interval_id);
+                if (content.is_aggregative)
+                    aggregative_content_count -= 1;
+                return false;
+            }
+            var selectors = content.get_targets_selector();
+            for (var i = 0; i < selectors.length; i++) {
+                if (selectors[i][0] != null) {
+                    clearInterval(content.target_set_interval_id);
+                    content.targetDiv = selectors[i][0];
+                    content.targetDivPosition = selectors[i][1];
+                    content.targetDivfromTop = Math.max(content.targetDiv.offsetTop, getOffset(content.targetDiv).top) + content.targetDiv.offsetHeight;
+                    if (content.targetDiv) {
+                        content.scroll_set_interval();
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    else {
+        clearInterval(content.target_set_interval_id);
+    }
+}
+function get_card_type(modal, i) {
+    var ct;
+    if (modal.media_queries[i]["card_type"]) {
+        if (modal.media_queries[i]["card_type"] === "random") {
+            ct = (modal.random_vertical_horizontal) ? "horizontal" : "vertical";
+        }
+        else {
+            ct = modal.media_queries[i]["card_type"];
+        }
+    }
+    else if (modal.card_type) {
+        ct = modal.card_type;
+    }
+    else {
+        ct = (modal.random_vertical_horizontal) ? "horizontal" : "vertical";
+    }
+    return ct;
+}
+function get_from_media_query(modal, property_name) {
+    var temp;
+    var windowWidth = window.screen.width ||
+        document.documentElement.clientWidth ||
+        document.body.clientWidth;
+    var ct;
+    for (var i = 0; i < modal.media_queries.length; i++) {
+        var min = modal.media_queries[i]["min-width"];
+        var max = modal.media_queries[i]["max-width"];
+        if (min && max) {
+            if (windowWidth >= min && windowWidth <= max) {
+                ct = get_card_type(modal, i);
+                temp = (typeof modal.media_queries[i][property_name] === "number") ? modal.media_queries[i][property_name] : modal.media_queries[i][property_name][ct];
+                break;
+            }
+        }
+        else if (min) {
+            if (windowWidth >= min) {
+                ct = get_card_type(modal, i);
+                temp = (typeof modal.media_queries[i][property_name] === "number") ? modal.media_queries[i][property_name] : modal.media_queries[i][property_name][ct];
+                break;
+            }
+        }
+        else if (max) {
+            if (windowWidth <= max) {
+                if (modal.media_queries[i]["card_type"]) {
+                    if (modal.media_queries[i]["card_type"] === "random") {
+                        ct = (modal.random_vertical_horizontal) ? "horizontal" : "vertical";
+                    }
+                    else {
+                        ct = modal.media_queries[i]["card_type"];
+                    }
+                }
+                else if (modal.card_type) {
+                    ct = modal.card_type;
+                }
+                else {
+                    ct = (modal.random_vertical_horizontal) ? "horizontal" : "vertical";
+                }
+                temp = (typeof modal.media_queries[i][property_name] === "number") ? modal.media_queries[i][property_name] : modal.media_queries[i][property_name][ct];
+                break;
+            }
+        }
+        else {
+            ct = get_card_type(modal, i);
+            temp = (typeof modal.media_queries[i][property_name] === "number") ? modal.media_queries[i][property_name] : modal.media_queries[i][property_name][ct];
+            break;
+        }
+    }
+    return [temp, ct];
+}
+function Content(content) {
+    if (content) {
+        if (responsive_screen == null || screenWidth == null || screenHeight == null || mobile == null) {
+            responsive_screen = detectScreen();
+            screenWidth = screen.width;
+            screenHeight = screen.height;
+            mobile = (mobileUserAgent()) ? 1 : 0;
+        }
+        var data_1 = {
+            name: content.name,
+            id: content.id,
+            id_with_prefix: content.id_prefix + "-" + content.id,
+            is_aggregative: content.is_aggregative,
+            show_in_mobile_user_agent: (content.show_in_mobile_user_agent === false) ? content.show_in_mobile_user_agent : true,
+            nofollow: content.nofollow,
+            size_condition: content.size_condition,
+            type_of_card: content.type_of_card || "card",
+            card_type: content.card_type,
+            random_vertical_horizontal: Math.round(Math.random()),
+            media_queries: content.media_queries,
+            addition_item: content.addition_item,
+            item_count: get_from_media_query(content, 'count')[0],
+            image_type: get_from_media_query(content, 'image_type')[0],
+            base_url: (content.base_url) ? content.base_url : "https://fetch.yektanet.com",
+            url_format: function () {
+                var url = data_1.base_url + "/api/v1/load?format=json&id=" + data_1.id + "&pos=1&image-type=" + data_1.image_type + "&w=" + screenWidth + "&l=" + screenHeight + "&count=" + data_1.item_count + "&is-mobile=" + mobile;
+                var os_conditions = {
+                    "Android": "&android=1&ios=0",
+                    "iOS": "&android=0&ios=1",
+                    "unknown": "&android=0&ios=0"
+                };
+                url += os_conditions[mobileOperationSystem()];
+                return url;
+            },
+            logo_text: content.logo_text,
+            ArticleBoxHeader: (responsive_screen === "mobile") ? content.article_box_header_mobile : content.article_box_header,
+            custom_css: content.custom_css,
+            has_heading_and_logo: content.has_heading_and_logo,
+            has_logo: content.has_logo,
+            target_set_interval_id: null,
+            scroll_set_interval_id: null,
+            targetOffsetFromTop: content.size_condition[responsive_screen].topOffset,
+            buildFunction: content.buildFunction,
+            stickyFunction: content.stickyFunction,
+            stickySetting: content.stickySetting,
+            sidebar_body: content.sidebar_body,
+            sidebar_parent: content.sidebar_parent,
+            sidebar_footer: content.sidebar_footer,
+            get_targets_selector: content.get_targets_selector,
+            notExist: function () {
+                return document.getElementById(data_1.id_with_prefix) == null;
+            },
+            get_target_div: function () {
+                content.getTargetDivFunction(data_1);
+            },
+            target_set_interval: function () {
+                data_1.target_set_interval_id = setInterval(data_1.get_target_div, 100);
+            },
+            scrollify: function () {
+                content.scrollFunction(data_1);
+            },
+            scroll_set_interval: function () {
+                data_1.scroll_set_interval_id = setInterval(data_1.scrollify, 100);
+            },
+            stickit: function () {
+                if (content.stickyFunction) {
+                    content.stickyFunction(data_1);
+                }
+            }
+        };
+        if (typeof content.base_url === "string") {
+            data_1.base_url = content.base_url;
+        }
+        else if (typeof content.base_url != "undefined") {
+            data_1.base_url = content.base_url[Math.floor(Math.random() * content.base_url.length)];
+        }
+        if (data_1.is_aggregative) {
+            aggregative_content_count += 1;
+            total_aggregative_item_count += data_1.item_count;
+        }
+        return data_1;
+    }
+    else
+        console.log("constructor should call by an object");
 }
 function insertAfter(newNode, referenceNode) {
     referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
@@ -93,9 +462,104 @@ function htmlToElement(html) {
 ///<reference path="../../utils/mobileUserAgent.ts" /> 
 ///<reference path="../../utils/mobileOperationSystem.ts" /> 
 ///<reference path="../../utils/variables.ts" /> 
+///<reference path="../../utils/scrollify.ts" /> 
 ///<reference path="../../utils/detectScreen.ts" /> 
+///<reference path="../../utils/build_function.ts" /> 
+///<reference path="../../utils/getTargetDiv.ts" /> 
+///<reference path="../../utils/constructor.ts" /> 
 ///<reference path="../../utils/insertAfter.ts" /> 
 ///<reference path="../../utils/getOffset.ts" /> 
 ///<reference path="../../utils/htmlToElement.ts" /> 
 mobile = (mobileUserAgent()) ? 1 : 0;
 responsive_screen = detectScreen();
+var main_content_1 = Content({
+    "id": 13,
+    "nofollow": true,
+    "base_url": "http://fetch.yektanet.com/",
+    "has_logo": true,
+    "size_condition": {
+        "LargeDevice": {
+            "topOffset": Infinity
+        },
+        "Desktop": {
+            "topOffset": Infinity
+        },
+        "tablet": {
+            "topOffset": Infinity
+        },
+        "mobile": {
+            "topOffset": Infinity
+        }
+    },
+    "custom_css": {
+        custom_yektanet_div: '{id}{color:#000000;background-color:#ffffff;}',
+        custom_heading: '{id} .yektanet-articles__heading{color:#000000;background-color:#ffffff;}',
+        custom_heading_branding: '{id} .yektanet-articles__heading-branding{color:#000000;background-color:#ffffff;}',
+        custom_item_title: '{id} .item__title{color:#000000;background-color:#ffffff;}',
+        custom_content: '{id} .yektanet-articles__content{color:#000000;background-color:#ffffff;}',
+        custom_css: '', custom_small_font: '@media screen and (max-width:349px){ {id} .item.vertical .item__body{padding: 10px 10px 0;}{id} .item.vertical .item__title{} {id} .item.horizontal .item__body{width:50%;}{id} .item.horizontal .item__image{width:50%;}}', custom_medium_font: '@media screen and (min-width:768px) and (max-width:991px){{id} .yektanet-articles__heading-title{}{id} .yektanet-articles__heading-branding-label{}{id} .item__title{} }', custom_large_font: '@media screen and (min-width:992px){{id} .yektanet-articles__heading-title{}{id} .yektanet-articles__heading-branding-label{}{id} .item__title{} }'
+    },
+    "media_queries": [
+        {
+            "min-width": 1921,
+            "item_in_row": 5,
+            "count": 10,
+            "image_type": 1,
+            "card_type": "vertical"
+        },
+        {
+            "max-width": 1920,
+            "min-width": 1200,
+            "item_in_row": 3,
+            "count": 6,
+            "image_type": 1,
+            "card_type": "vertical"
+        },
+        {
+            "max-width": 1199,
+            "min-width": 992,
+            "item_in_row": 3,
+            "count": 6,
+            "image_type": 1,
+            "card_type": "vertical"
+        },
+        {
+            "max-width": 991,
+            "min-width": 768,
+            "item_in_row": 3,
+            "count": 6,
+            "image_type": 3,
+            "card_type": "vertical"
+        },
+        {
+            "max-width": 767,
+            "min-width": 340,
+            "item_in_row": 2,
+            "count": 6,
+            "image_type": 3,
+            "card_type": "vertical"
+        },
+        {
+            "max-width": 339,
+            "item_in_row": 1,
+            "count": 6,
+            "image_type": 3,
+            "card_type": "vertical"
+        },
+    ],
+    "has_heading_and_logo": true,
+    "getTargetDivFunction": getTargetDiv,
+    "get_targets_selector": function () {
+        return [
+            [document.querySelector("#yektanet-pos-1"), "after"],
+        ];
+    },
+    "logo_text": "پیشنهاد توسط",
+    "id_prefix": "yektanet-articles",
+    "name": "asriran",
+    "article_box_header": "مطالب پیشنهادی از سراسر وب",
+    "buildFunction": build,
+    "scrollFunction": scrollify,
+    "article_box_header_mobile": "مطالب پیشنهادی"
+});
+main_content_1.target_set_interval();
