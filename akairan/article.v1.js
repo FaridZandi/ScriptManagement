@@ -390,7 +390,7 @@ var content_box_1 = scriptContent({
         custom_css: ''
     },
     "branding_label": "پیشنهاد توسط",
-    "has_heading": true,
+    "has_heading": false,
     "media_queries": {
         1921: {
             "items_in_row": 5,
